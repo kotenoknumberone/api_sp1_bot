@@ -1,7 +1,7 @@
 import os
 import requests
 import telegram
-import time
+import datetime as dt
 import logging
 from dotenv import load_dotenv
 
@@ -22,10 +22,12 @@ bot = telegram.Bot(token=TELEGRAM_TOKEN)
 
 def parse_homework_status(homework):
     homework_name = homework['homework_name']
-    if homework['status'] == 'rejected':
-        verdict = 'К сожалению в работе нашлись ошибки.'
-    else:
-        verdict = 'Ревьюеру всё понравилось, можно приступать к следующему уроку.'
+    try:
+        if homework['status'] == 'rejected':
+            verdict = 'К сожалению в работе нашлись ошибки.'
+        else:
+            verdict = 'Ревьюеру всё понравилось, можно приступать к следующему уроку.'
+    except:
         if homework['status'] != 'rejected' or 'approved':
             logging.error("Exception occurred")
     return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
@@ -33,7 +35,9 @@ def parse_homework_status(homework):
 
 def get_homework_statuses(current_timestamp):
     headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
-    params = {'from_date': current_timestamp}
+    params = {'from_date': current_timestamp or None}
+    if params['from_date'] == None:
+        current_timestamp == dt.date.today()
     praktikum_url = 'https://praktikum.yandex.ru/api/user_api/homework_statuses/'
     homework_statuses = requests.get(praktikum_url, headers=headers, params=params)
     try:
@@ -54,7 +58,7 @@ def main():
             new_homework = get_homework_statuses(current_timestamp)
             if new_homework.get('homeworks'):
                 send_message(parse_homework_status(new_homework.get('homeworks')[0]))
-            current_timestamp = new_homework.get('current_date', current_timestamp)  
+            current_timestamp = new_homework.get('current_date')  
             time.sleep(700)
 
         except Exception as e:
