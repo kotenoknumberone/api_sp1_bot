@@ -22,22 +22,21 @@ bot = telegram.Bot(token=TELEGRAM_TOKEN)
 
 def parse_homework_status(homework):
     homework_name = homework['homework_name']
-    try:
-        if homework['status'] == 'rejected':
-            verdict = 'К сожалению в работе нашлись ошибки.'
-        else:
-            verdict = 'Ревьюеру всё понравилось, можно приступать к следующему уроку.'
-    except:
-        if homework['status'] != 'rejected' or 'approved':
-            logging.error("Exception occurred")
+    if homework['status'] == 'rejected':
+        verdict = 'К сожалению в работе нашлись ошибки.'
+    elif homework['status'] == 'approved':
+        verdict = 'Ревьюеру всё понравилось, можно приступать к следующему уроку.'
+    else:
+        logging.error("Неверный ответ сервера")
+        return 'Неверный ответ сервера'
     return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
 def get_homework_statuses(current_timestamp):
     headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
-    params = {'from_date': current_timestamp or None}
-    if params['from_date'] == None:
+    if current_timestamp == None:
         current_timestamp == dt.date.today()
+    params = {'from_date': current_timestamp}
     praktikum_url = 'https://praktikum.yandex.ru/api/user_api/homework_statuses/'
     homework_statuses = requests.get(praktikum_url, headers=headers, params=params)
     try:
