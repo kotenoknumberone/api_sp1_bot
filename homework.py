@@ -45,7 +45,7 @@ def get_homework_statuses(current_timestamp):
         logging.error("Exception occurred")
 
 
-def send_message(message):
+def send_message(message, bot):
     return bot.send_message(chat_id=CHAT_ID, text=message)
 
 
